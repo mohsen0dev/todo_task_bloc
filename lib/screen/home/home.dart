@@ -20,13 +20,11 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
 
     _listNotifier = ValueNotifier<List<dynamic>>(MyHomePage.taskList);
-    print(MyHomePage.taskList);
   }
 
   @override
   Widget build(BuildContext context) {
-    ValueNotifier<List> _listNotifier =
-        ValueNotifier<List>(MyHomePage.taskList);
+    _listNotifier = ValueNotifier<List>(MyHomePage.taskList);
     return Scaffold(
       appBar: AppBar(
         title: const Text('یادداشت ها'),

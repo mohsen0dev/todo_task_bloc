@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:todo_task_bloc/screen/home/home.dart';
 import 'package:todo_task_bloc/screen/widgets/textfield.dart';
 
+// ignore: must_be_immutable
 class AddTaskScreen extends StatefulWidget {
   final List? taskList;
   AddTaskScreen({Key? key, this.taskList}) : super(key: key);

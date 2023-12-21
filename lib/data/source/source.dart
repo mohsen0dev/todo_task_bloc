@@ -1,7 +1,5 @@
 //crud
 
-import 'package:todo_task_bloc/data/model/todo_entity.dart';
-
 abstract class DataSource<T> {
   Future<T> createOrUpdate(T data);
   Future<T> findById(dynamic id);
