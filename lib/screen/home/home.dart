@@ -1,30 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
+import 'package:todo_task_bloc/data/model/todo_entity.dart';
+import 'package:todo_task_bloc/data/repository/repository.dart';
 import 'package:todo_task_bloc/screen/add/add_task.dart';
+import 'package:todo_task_bloc/screen/home/bloc/note_list_bloc.dart';
+import 'package:todo_task_bloc/screen/widgets/emty_widget.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
-  static List taskList = [
-    task(title: 'text1', description: 'body1', active: 0),
-    task(title: 'text2', description: 'body2', active: 1),
-    task(title: 'text3', description: 'body3', active: 2),
-  ];
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  late ValueNotifier<List<dynamic>> _listNotifier;
-  @override
-  void initState() {
-    super.initState();
-
-    _listNotifier = ValueNotifier<List<dynamic>>(MyHomePage.taskList);
-  }
-
   @override
   Widget build(BuildContext context) {
-    _listNotifier = ValueNotifier<List>(MyHomePage.taskList);
     return Scaffold(
       appBar: AppBar(
         title: const Text('یادداشت ها'),
@@ -32,9 +24,12 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       floatingActionButton: FloatingActionButton(
           onPressed: () async {
-            await Navigator.push(context,
-                    MaterialPageRoute(builder: (context) => AddTaskScreen()))
-                .then((value) {
+            await Navigator.push(
+                context,
+                MaterialPageRoute(
+                    builder: (context) => AddTaskScreen(
+                          task: TaskEntity(),
+                        ))).then((value) {
               setState(() {});
             });
           },
@@ -43,91 +38,137 @@ class _MyHomePageState extends State<MyHomePage> {
             size: 30,
           )),
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          child: Column(
-            children: [
-              const TextField(),
-              Row(
-                children: [
-                  Text('تعداد کد یادداشت ها = ${MyHomePage.taskList.length}'),
-                  const Spacer(),
-                  MaterialButton(
-                    onPressed: () {},
-                    color: Colors.purple.shade100,
-                    child: const Text('حذف همه'),
-                  )
-                ],
-              ),
-              Expanded(
-                child: ValueListenableBuilder<List>(
-                    valueListenable: _listNotifier,
-                    builder: (context, value, child) {
-                      return ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: MyHomePage.taskList.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          return InkWell(
-                            onTap: () {
-                              Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => AddTaskScreen(
-                                            taskList: [
-                                              MyHomePage.taskList[index]
-                                            ],
-                                          )));
-                            },
-                            child: SizedBox(
-                              height: 80,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                children: [
-                                  Expanded(
-                                    flex: 20,
-                                    child: Container(
-                                      // height: 80,
-                                      decoration: const BoxDecoration(
-                                          color: Colors.white,
-                                          boxShadow: [
-                                            BoxShadow(
-                                                blurRadius: 4,
-                                                color: Colors.black26,
-                                                offset: Offset(0, 0))
-                                          ]),
-                                      margin: const EdgeInsets.only(
-                                          bottom: 4, right: 2),
-                                      padding: const EdgeInsets.all(24),
-                                      child: Text(
-                                          '${MyHomePage.taskList[index][0]}'),
-                                    ),
-                                  ),
-                                  Container(
-                                    margin: const EdgeInsets.only(
-                                        bottom: 8, top: 4),
-                                    decoration: BoxDecoration(
-                                        color: setColor(
-                                            number: MyHomePage.taskList[index]
-                                                [2]),
-                                        borderRadius: const BorderRadius.only(
-                                            bottomLeft: Radius.circular(6),
-                                            topLeft: Radius.circular(6))),
-                                    width: 12,
-                                  ),
-                                ],
-                              ),
-                            ),
+      body: BlocProvider<NoteListBloc>(
+        create: (context) =>
+            NoteListBloc(context.read<Repository<TaskEntity>>()),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            child: Column(
+              children: [
+                const TextField(),
+                Expanded(
+                  child: Consumer<Repository<TaskEntity>>(
+                      builder: (context, repository, child) {
+                    context.read<NoteListBloc>().add(NoteListStarted());
+                    return BlocBuilder<NoteListBloc, NoteListState>(
+                      builder: (context, state) {
+                        if (state is NoteListSuccess) {
+                          return TaskListView(
+                            item: state.item,
                           );
-                        },
-                      );
-                    }),
-              ),
-            ],
+                        } else if (state is NoteListLoading ||
+                            state is NoteListInitial) {
+                          const Center(
+                            child: CircularProgressIndicator(),
+                          );
+
+                          return Container(
+                            height: double.infinity,
+                            width: double.infinity,
+                            color: Colors.green,
+                          );
+                        } else if (state is NoteListEmpty) {
+                          return const EmptyPage();
+                        } else if (state is NoteListError) {
+                          return const Center(
+                            child: Text('خطا در برقراری ارتباط با سرور'),
+                          );
+                        } else {
+                          return Container();
+                        }
+                      },
+                    );
+                  }),
+                ),
+              ],
+            ),
           ),
         ),
       ),
+    );
+  }
+}
+
+class TaskListView extends StatelessWidget {
+  final List<TaskEntity> item;
+
+  const TaskListView({
+    super.key,
+    required this.item,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      shrinkWrap: true,
+      itemCount: item.length + 1,
+      itemBuilder: (BuildContext context, int index) {
+        if (index == 0) {
+          return Row(
+            children: [
+              Text('تعداد کد یادداشت ها = ${item.length}'),
+              // Text('تعداد کد یادداشت ها = ${MyHomePage.taskList.length}'),
+              const Spacer(),
+              MaterialButton(
+                onPressed: () {
+                  context.read<NoteListBloc>().add(NoteListDeletAll());
+                },
+                color: Colors.purple.shade100,
+                child: const Text('حذف همه'),
+              )
+            ],
+          );
+        } else {
+          var task = item[index - 1];
+          return InkWell(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => AddTaskScreen(
+                    task: task,
+                  ),
+                ),
+              );
+            },
+            child: SizedBox(
+              height: 80,
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Expanded(
+                    flex: 20,
+                    child: Container(
+                      decoration: const BoxDecoration(
+                          color: Colors.white,
+                          boxShadow: [
+                            BoxShadow(
+                                blurRadius: 4,
+                                color: Colors.black26,
+                                offset: Offset(0, 0))
+                          ]),
+                      margin: const EdgeInsets.only(bottom: 4, right: 2),
+                      padding: const EdgeInsets.all(24),
+                      child: Text(task.title),
+                    ),
+                  ),
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 8, top: 4),
+                    decoration: BoxDecoration(
+                        color: setColor(number: task.active),
+                        borderRadius: const BorderRadius.only(
+                            bottomLeft: Radius.circular(6),
+                            topLeft: Radius.circular(6))),
+                    width: 12,
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+      },
     );
   }
 

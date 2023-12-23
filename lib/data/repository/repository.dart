@@ -4,7 +4,7 @@ import 'package:todo_task_bloc/data/source/source.dart';
 class Repository<T> extends ChangeNotifier implements DataSource<T> {
   final DataSource<T> localDataSource;
 
-  Repository({required this.localDataSource});
+  Repository(this.localDataSource);
 
   @override
   Future<T> createOrUpdate(T data) async {

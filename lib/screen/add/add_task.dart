@@ -1,25 +1,29 @@
 import 'package:flutter/material.dart';
-import 'package:todo_task_bloc/screen/home/home.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:todo_task_bloc/data/model/todo_entity.dart';
+import 'package:todo_task_bloc/data/repository/repository.dart';
 import 'package:todo_task_bloc/screen/widgets/textfield.dart';
 
 // ignore: must_be_immutable
 class AddTaskScreen extends StatefulWidget {
-  final List? taskList;
-  AddTaskScreen({Key? key, this.taskList}) : super(key: key);
+  final TaskEntity? task;
+
+  AddTaskScreen({Key? key, this.task}) : super(key: key);
 
   @override
   State<AddTaskScreen> createState() => _AddTaskScreenState();
   TextEditingController titleController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
+  int active = 0;
 }
 
 class _AddTaskScreenState extends State<AddTaskScreen> {
-  int active = 0;
   @override
   void initState() {
-    if (widget.taskList != null) {
-      widget.titleController.text = widget.taskList![0][0].toString();
-      widget.descriptionController.text = widget.taskList![0][1].toString();
+    if (widget.task != null) {
+      widget.titleController.text = widget.task!.title.toString();
+      widget.descriptionController.text = widget.task!.description.toString();
+      widget.active = widget.task!.active;
     }
     super.initState();
   }
@@ -28,8 +32,8 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
-      floatingActionButton:
-          fAb(widget.titleController, widget.descriptionController, context),
+      floatingActionButton: myFloatingAction(
+          widget.titleController, widget.descriptionController, context),
       appBar: AppBar(
         title: const Text('افزودت یادداشت'),
         centerTitle: true,
@@ -52,10 +56,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       children: [
                         Radio(
                           activeColor: Colors.white,
-                          value: active == 0 ? true : false,
+                          value: widget.active == 0 ? true : false,
                           onChanged: (v) {
                             setState(() {
-                              active = 0;
+                              widget.active = 0;
                             });
                           },
                           groupValue: true,
@@ -79,10 +83,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       children: [
                         Radio(
                           activeColor: Colors.white,
-                          value: active == 1 ? true : false,
+                          value: widget.active == 1 ? true : false,
                           onChanged: (v) {
                             setState(() {
-                              active = 1;
+                              widget.active = 1;
                             });
                           },
                           groupValue: true,
@@ -106,10 +110,10 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
                       children: [
                         Radio(
                           activeColor: Colors.white,
-                          value: active == 2 ? true : false,
+                          value: widget.active == 2 ? true : false,
                           onChanged: (v) {
                             setState(() {
-                              active = 2;
+                              widget.active = 2;
                             });
                           },
                           groupValue: true,
@@ -152,17 +156,16 @@ class _AddTaskScreenState extends State<AddTaskScreen> {
     );
   }
 
-  FloatingActionButton fAb(TextEditingController titleController,
+  FloatingActionButton myFloatingAction(TextEditingController titleController,
       TextEditingController descriptionController, BuildContext context) {
     return FloatingActionButton(
       onPressed: () {
         if (titleController.text.isNotEmpty &&
             descriptionController.text.isNotEmpty) {
-          List newTask = task(
-              title: titleController.text,
-              description: descriptionController.text,
-              active: active);
-          MyHomePage.taskList.add(newTask);
+          widget.task!.title = titleController.text;
+          widget.task!.description = descriptionController.text;
+          widget.task!.active = widget.active;
+          context.read<Repository<TaskEntity>>().createOrUpdate(widget.task!);
           Navigator.pop(context);
         }
       },
