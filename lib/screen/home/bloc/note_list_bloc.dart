@@ -13,6 +13,7 @@ class NoteListBloc extends Bloc<NoteListEvent, NoteListState> {
       if (event is NoteListStarted || event is NoteListSearch) {
         final String searchTerm;
         emit(NoteListLoading());
+        // await Future.delayed(const Duration(milliseconds: 200));
         if (event is NoteListSearch) {
           searchTerm = event.searchterm;
         } else {

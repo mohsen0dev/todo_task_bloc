@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "C:/Users/mohsen/Documents/flutter project/todo_task_bloc/windows/flutter"
+    "cmake.sourceDirectory": "C:/Users/mohsen/Documents/flutter project/todo_task_bloc/windows/flutter",
+    "cmake.configureOnOpen": false
 }

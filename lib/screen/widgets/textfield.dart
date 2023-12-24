@@ -13,6 +13,7 @@ Widget myTextfild({
   Text? lablText,
   Icon? icon,
   String? validator = 'اطلاعات مورد نظر را وارد کنید',
+  Function(String v)? onChanged,
 }) {
   return Container(
     margin: EdgeInsets.symmetric(horizontal: wi * 0.01),
@@ -30,6 +31,7 @@ Widget myTextfild({
           if (value == '') return validator;
           return null;
         },
+        onChanged: onChanged,
         decoration: InputDecoration(
           label: lablText,
           suffixIcon: icon,
